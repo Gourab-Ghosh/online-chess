@@ -60,7 +60,7 @@ class Browser(Driver):
     def __init__(self) -> None:
         super().__init__()
         self.board = Board(self.driver)
-        self.logged_in = False
+        self._logged_in = False
         self.set_ids_and_css()
     
     def set_ids_and_css(self) -> None:
@@ -80,7 +80,7 @@ class Browser(Driver):
         password_input.send_keys(password)
         login_button = self.find_element(*self.login_button_selector)
         login_button.click()
-        self.logged_in = True
+        self._logged_in = True
 
 class ChessDotComBrowser(Browser):
     
@@ -105,7 +105,7 @@ class ChessDotComBrowser(Browser):
             self.wait()
             play_button = self.find_element(*self.play_button_selector)
             play_button.click()
-            if not self.logged_in:
+            if not self._logged_in:
                 play_as_guest_button = self.find_element(By.ID, "guest-button")
                 authentication_levels = self.driver.find_elements(By.CLASS_NAME, "authentication-intro-level")
                 authentication_level = authentication_levels[-1]
