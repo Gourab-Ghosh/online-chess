@@ -31,7 +31,11 @@ class Board(Driver):
     pass
 
 class ChessDotComBoard(Board):
-    
+
+    def __init__(self, driver) -> None:
+        super().__init__(driver)
+        self.chess_board = self.driver.find_element(By.TAG_NAME, "chess-board")
+
     def get_piece_unordered_map(self):
         pieces = self.driver.find_elements(By.CLASS_NAME, "piece")
         piece_map = {}
@@ -54,6 +58,20 @@ class ChessDotComBoard(Board):
             square = getattr(chess, f"{string.ascii_uppercase[row-1]}{col}")
             piece_map[square] = piece
         return piece_map
+
+    def square_to_coordinate(self, square, board_flipped):
+        row, col = divmod(square, 8)
+        if board_flipped:
+            col = 7-col
+        else:
+            row = 7-row
+        rect = self.chess_board.rect
+        x = rect["x"]
+        y = rect["y"]
+        width = rect["width"]
+        height = rect["height"]
+        single_cell_width, single_cell_height = width / 8, height / 8
+        return (col + 0.5) * single_cell_width + x, (row + 0.5) * single_cell_height + y
 
 class Browser(Driver):
 
