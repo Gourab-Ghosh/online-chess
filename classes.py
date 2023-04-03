@@ -5,6 +5,18 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 
+class Timecat:
+    
+    def __init__(self) -> None:
+        self.board = chess.Board()
+    
+    def apply_move(self, uci: str):
+        self.board.push_uci(uci)
+    
+    def get_best_move(self) -> chess.Move:
+        import random
+        return random.choice(tuple(self.board.legal_moves)).uci()
+
 class Driver:
 
     def __init__(self, driver = None) -> None:
@@ -13,12 +25,12 @@ class Driver:
             driver.maximize_window()
         self.driver = driver
 
-    def find_element(self, by: By, value: str, wait_time: int = 60) -> None:
+    def find_element(self, by: By, value: str, wait_time: int = 60):
         if wait_time == 0:
             return self.driver.find_element(by, value)
         return WebDriverWait(self.driver, wait_time).until(EC.presence_of_element_located((by, value)))
 
-    def find_elements(self, by: By, value: str, wait_time: int = 60) -> None: # Incomplete
+    def find_elements(self, by: By, value: str, wait_time: int = 60): # Incomplete
         if wait_time == 0:
             return self.driver.find_elements(by, value)
         return self.driver.find_elements(by, value)
@@ -37,6 +49,7 @@ class Board(Driver):
     def __init__(self, driver=None) -> None:
         super().__init__(driver)
         self.board = chess.Board()
+        self.bot = Timecat()
 
 class ChessDotComBoard(Board):
 
@@ -90,6 +103,7 @@ class ChessDotComBoard(Board):
         offset = (j-i for i, j in zip(from_square_coord, to_square_coord))
         piece = self.find_element(By.CLASS_NAME, f"square-{from_square % 8 + 1}{from_square // 8 + 1}")
         action.drag_and_drop_by_offset(piece, *offset).perform()
+        self.wait_while_dragging_piece()
         if promotion:
             promotion_piece_css_selector = f".promotion-piece.{'w' if self.board.turn else 'b'}{' pkbrqk'[promotion]}"
             promotion_piece = self.find_element(By.CSS_SELECTOR, promotion_piece_css_selector)
@@ -110,7 +124,7 @@ class ChessDotComBoard(Board):
             self.move_piece(move.from_square, move.to_square, move.promotion)
         print(f"Move: {self.board.san(move)}")
         self.board.push(move)
-        # self.bot.apply_move(move.uci())
+        self.bot.apply_move(move.uci())
 
     def set_pre_play_constants(self):
         self.move_list = self.find_element(By.ID, "move-list")
@@ -118,28 +132,42 @@ class ChessDotComBoard(Board):
         self.is_flipped = "flipped" in self.chess_board.get_attribute("class")
         print(f"Board flipped: {self.is_flipped}")
     
+    def get_ply(self) -> int:
+        moves = self.move_list.find_elements(By.CLASS_NAME, "node")
+        return len(moves)
+    
+    def wait_while_dragging_piece(self):
+        while any("dragging" in i.get_attribute("class") for i in self.find_elements(By.CLASS_NAME, "piece")):
+            pass
+
     def detect_move(self):
-        # moves = self.move_list.find_elements(By.CLASS_NAME, "move")
-        pass
+        prev_ply = self.get_ply()
+        while True:
+            if self.get_ply() > prev_ply:
+                self.wait_while_dragging_piece()
+                break
+        curr_piece_map = self.get_piece_unordered_map()
+        for move in self.board.legal_moves:
+            print(f"Trying: {self.board.san(move)}")
+            self.board.push(move)
+            try:
+                if self.board.piece_map() == curr_piece_map:
+                    return move
+            finally:
+                self.board.pop()
 
     def play_game(self):
         self.set_pre_play_constants()
         print("Started Playing...")
-        bot_color = not self.board_flipped
-        # white_clock = self.find_element(By.CSS_SELECTOR, ".clock-white.player-clock")
-        # black_clock = self.find_element(By.CSS_SELECTOR, ".clock-black.player-clock")
-        # detect_move = lambda: self.detect_move(white_clock, black_clock)
-        # while True:
-        #     if self.is_game_over(True):
-        #         break
-        #     bot_turn = self.board.turn == bot_color
-        #     bot_clock = white_clock if bot_color else black_clock
-        #     opponent_clock = black_clock if bot_color else white_clock
-        #     move = chess.Move.from_uci(self.bot.get_best_move(print_move = True, self_time_left = self.detect_time_left(bot_clock), opponent_time_left = self.detect_time_left(opponent_clock))) if bot_turn else detect_move()
-        #     if move is None:
-        #         break
-        #     # move = chess.Move.from_uci(self.bot.get_best_move(debug=False)) if bot_turn else detect_move()
-        #     self.push(move, bot_turn)
+        bot_color = not self.is_flipped
+        while True:
+            if self.is_game_over():
+                break
+            bot_turn = self.board.turn == bot_color
+            move = chess.Move.from_uci(self.bot.get_best_move()) if bot_turn else self.detect_move()
+            if move is None:
+                break
+            self.push(move, bot_turn)
 
 class LichessBoard(Board):
     pass
