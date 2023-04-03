@@ -23,7 +23,7 @@ class Driver:
             return self.driver.find_elements(by, value)
         return self.driver.find_elements(by, value)
 
-    def wait(self, wait_time: int = 3) -> None:
+    def wait(self, wait_time: int = 1) -> None:
         time.sleep(wait_time)
 
 class Piece(Driver):
@@ -117,6 +117,10 @@ class ChessDotComBoard(Board):
         self.chess_board = self.find_element(By.TAG_NAME, "chess-board")
         self.is_flipped = "flipped" in self.chess_board.get_attribute("class")
         print(f"Board flipped: {self.is_flipped}")
+    
+    def detect_move(self):
+        # moves = self.move_list.find_elements(By.CLASS_NAME, "move")
+        pass
 
     def play_game(self):
         self.set_pre_play_constants()
@@ -186,7 +190,6 @@ class ChessDotComBrowser(Browser):
         play_link2 = self.find_element(By.PARTIAL_LINK_TEXT, "Play Online")
         play_link2.click()
         if click_play_button:
-            self.wait()
             play_button = self.find_element(*self.play_button_selector)
             play_button.click()
             if not self._logged_in:
