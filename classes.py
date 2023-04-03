@@ -112,36 +112,30 @@ class ChessDotComBoard(Board):
         self.board.push(move)
         # self.bot.apply_move(move.uci())
 
-    # def play_one_move(self):
-    #     self.scan_board()
-    #     self.board.set_piece_map(self.get_piece_unordered_map())
-    #     self.board_flipped = "flipped" in self.chess_board.get_attribute("class")
-    #     bot_color = not self.board_flipped
-    #     bot_turn = self.board.turn == bot_color
-    #     if bot_turn:
-    #         move = self.bot.get_best_move()
-    #         self.push(move)
-    #     else:
-    #         self.wait(1)
+    def set_pre_play_constants(self):
+        self.move_list = self.find_element(By.ID, "move-list")
+        self.chess_board = self.find_element(By.TAG_NAME, "chess-board")
+        self.is_flipped = "flipped" in self.chess_board.get_attribute("class")
+        print(f"Board flipped: {self.is_flipped}")
 
-    # def play_game(self):
-    #     print("Started Playing...")
-    #     self.board_flipped = "flipped" in self.chess_board.get_attribute("class")
-    #     bot_color = not self.board_flipped
-    #     white_clock = self.find_element(By.CSS_SELECTOR, ".clock-white.player-clock")
-    #     black_clock = self.find_element(By.CSS_SELECTOR, ".clock-black.player-clock")
-    #     detect_move = lambda: self.detect_move(white_clock, black_clock)
-    #     while True:
-    #         if self.is_game_over(True):
-    #             break
-    #         bot_turn = self.board.turn == bot_color
-    #         bot_clock = white_clock if bot_color else black_clock
-    #         opponent_clock = black_clock if bot_color else white_clock
-    #         move = chess.Move.from_uci(self.bot.get_best_move(print_move = True, self_time_left = self.detect_time_left(bot_clock), opponent_time_left = self.detect_time_left(opponent_clock))) if bot_turn else detect_move()
-    #         if move is None:
-    #             break
-    #         # move = chess.Move.from_uci(self.bot.get_best_move(debug=False)) if bot_turn else detect_move()
-    #         self.push(move, bot_turn)
+    def play_game(self):
+        self.set_pre_play_constants()
+        print("Started Playing...")
+        bot_color = not self.board_flipped
+        # white_clock = self.find_element(By.CSS_SELECTOR, ".clock-white.player-clock")
+        # black_clock = self.find_element(By.CSS_SELECTOR, ".clock-black.player-clock")
+        # detect_move = lambda: self.detect_move(white_clock, black_clock)
+        # while True:
+        #     if self.is_game_over(True):
+        #         break
+        #     bot_turn = self.board.turn == bot_color
+        #     bot_clock = white_clock if bot_color else black_clock
+        #     opponent_clock = black_clock if bot_color else white_clock
+        #     move = chess.Move.from_uci(self.bot.get_best_move(print_move = True, self_time_left = self.detect_time_left(bot_clock), opponent_time_left = self.detect_time_left(opponent_clock))) if bot_turn else detect_move()
+        #     if move is None:
+        #         break
+        #     # move = chess.Move.from_uci(self.bot.get_best_move(debug=False)) if bot_turn else detect_move()
+        #     self.push(move, bot_turn)
 
 class LichessBoard(Board):
     pass
@@ -186,12 +180,6 @@ class ChessDotComBrowser(Browser):
         self.login_button_selector = (By.ID, "login")
         self.play_button_selector = (By.CSS_SELECTOR, ".ui_v5-button-component.ui_v5-button-primary.ui_v5-button-large.ui_v5-button-full")
 
-    def set_post_start_constants(self):
-        self.move_list = self.find_element(By.ID, "move-list")
-        self.board.chess_board = self.find_element(By.TAG_NAME, "chess-board")
-        self.board.is_flipped = "flipped" in self.board.chess_board.get_attribute("class")
-        print(f"Board flipped: {self.board.is_flipped}")
-
     def start_game(self, click_play_button = True):
         play_link1 = self.find_element(By.LINK_TEXT, "Play")
         play_link1.click()
@@ -209,7 +197,6 @@ class ChessDotComBrowser(Browser):
                 play_as_guest_button.click()
                 play_button = self.find_element(*self.play_button_selector)
                 play_button.click()
-        self.set_post_start_constants()
 
 class LichessBrowser(Browser):
     
