@@ -41,6 +41,15 @@ class Driver:
 
     def wait(self, wait_time: int = 1) -> None:
         time.sleep(wait_time)
+    
+    def click(self, element):
+        while True:
+            try:
+                element.click()
+            except:
+                pass
+            else:
+                break
 
 class Piece(Driver):
     pass
@@ -111,7 +120,7 @@ class ChessDotComBoard(Board):
         if promotion:
             promotion_piece_css_selector = f".promotion-piece.{'w' if self.board.turn else 'b'}{' pkbrqk'[promotion]}"
             promotion_piece = self.find_element(By.CSS_SELECTOR, promotion_piece_css_selector)
-            promotion_piece.click()
+            self.click(promotion_piece)
 
     def is_game_over(self):
         return self.board.is_game_over()
@@ -164,7 +173,7 @@ class ChessDotComBoard(Board):
             prev_ply = self.get_ply()
             while True:
                 if self.get_ply() > prev_ply:
-                    self.wait(0.5)
+                    # self.wait(0.5)
                     self.wait_while_dragging_piece()
                     break
         curr_piece_map = self.get_piece_unordered_map()
@@ -215,13 +224,13 @@ class Browser(Driver):
         if None in [self.login_page_link_selector, self.username_input_selector, self.password_input_selector, self.login_button_selector]:
             raise NotImplementedError
         login_page_link = self.find_element(*self.login_page_link_selector)
-        login_page_link.click()
+        self.click(login_page_link)
         username_input = self.find_element(*self.username_input_selector)
         username_input.send_keys(username)
         password_input = self.find_element(*self.password_input_selector)
         password_input.send_keys(password)
         login_button = self.find_element(*self.login_button_selector)
-        login_button.click()
+        self.click(login_button)
         self._logged_in = True
 
 class ChessDotComBrowser(Browser):
@@ -240,20 +249,20 @@ class ChessDotComBrowser(Browser):
 
     def start_game(self, click_play_button = True):
         play_link1 = self.find_element(By.LINK_TEXT, "Play")
-        play_link1.click()
+        self.click(play_link1)
         play_link2 = self.find_element(By.PARTIAL_LINK_TEXT, "Play Online")
-        play_link2.click()
+        self.click(play_link2)
         if click_play_button:
             play_button = self.find_element(*self.play_button_selector)
-            play_button.click()
+            self.click(play_button)
             if not self._logged_in:
                 play_as_guest_button = self.find_element(By.ID, "guest-button")
                 authentication_levels = self.find_elements(By.CLASS_NAME, "authentication-intro-level")
                 authentication_level = authentication_levels[-1]
-                authentication_level.click()
-                play_as_guest_button.click()
+                self.click(authentication_level)
+                self.click(play_as_guest_button)
                 play_button = self.find_element(*self.play_button_selector)
-                play_button.click()
+                self.click(play_button)
 
 class LichessBrowser(Browser):
 
