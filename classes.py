@@ -4,18 +4,22 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+from rich.traceback import install
+from timecat import Timecat
 
-class Timecat:
+install()
+
+# class Timecat:
     
-    def __init__(self) -> None:
-        self.board = chess.Board()
+#     def __init__(self) -> None:
+#         self.board = chess.Board()
     
-    def apply_move(self, uci: str):
-        self.board.push_uci(uci)
+#     def apply_move(self, uci: str):
+#         self.board.push_uci(uci)
     
-    def get_best_move(self) -> chess.Move:
-        import random
-        return random.choice(tuple(self.board.legal_moves)).uci()
+#     def get_best_move(self) -> chess.Move:
+#         import random
+#         return random.choice(tuple(self.board.legal_moves)).uci()
 
 class Driver:
 
@@ -126,8 +130,18 @@ class ChessDotComBoard(Board):
         self.board.push(move)
         self.bot.apply_move(move.uci())
 
+    def get_move_list(self):
+        while True:
+            try:
+                return self.find_element(By.ID, "move-list", 0)
+            except:
+                try:
+                    return self.find_element(By.CLASS_NAME, "play-controller-moves-container", 0)
+                except:
+                    pass
+
     def set_pre_play_constants(self):
-        self.move_list = self.find_element(By.ID, "move-list")
+        self.move_list = self.get_move_list()
         self.chess_board = self.find_element(By.TAG_NAME, "chess-board")
         self.is_flipped = "flipped" in self.chess_board.get_attribute("class")
         print(f"Board flipped: {self.is_flipped}")
@@ -140,15 +154,16 @@ class ChessDotComBoard(Board):
         while any("dragging" in i.get_attribute("class") for i in self.find_elements(By.CLASS_NAME, "piece")):
             pass
 
-    def detect_move(self):
-        prev_ply = self.get_ply()
-        while True:
-            if self.get_ply() > prev_ply:
-                self.wait_while_dragging_piece()
-                break
+    def detect_move(self, wait_for_move = True):
+        if wait_for_move:
+            prev_ply = self.get_ply()
+            while True:
+                if self.get_ply() > prev_ply:
+                    self.wait(0.5)
+                    self.wait_while_dragging_piece()
+                    break
         curr_piece_map = self.get_piece_unordered_map()
         for move in self.board.legal_moves:
-            print(f"Trying: {self.board.san(move)}")
             self.board.push(move)
             try:
                 if self.board.piece_map() == curr_piece_map:
@@ -156,15 +171,21 @@ class ChessDotComBoard(Board):
             finally:
                 self.board.pop()
 
-    def play_game(self):
+    def play_game(self): # Incomplete
         self.set_pre_play_constants()
+        self.board.reset()
         print("Started Playing...")
         bot_color = not self.is_flipped
+        if self.board.turn != bot_color:
+            move = self.detect_move(False)
+            if move is not None:
+                self.push(move, False)
         while True:
             if self.is_game_over():
                 break
             bot_turn = self.board.turn == bot_color
-            move = chess.Move.from_uci(self.bot.get_best_move()) if bot_turn else self.detect_move()
+            # move = chess.Move.from_uci(self.bot.get_best_move()) if bot_turn else self.detect_move()
+            move = self.board.parse_san(self.bot.get_best_move()) if bot_turn else self.detect_move()
             if move is None:
                 break
             self.push(move, bot_turn)
@@ -230,7 +251,7 @@ class ChessDotComBrowser(Browser):
                 play_button.click()
 
 class LichessBrowser(Browser):
-    
+
     def __init__(self) -> None:
         super().__init__()
         self.goto('https://lichess.org')
