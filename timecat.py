@@ -1,5 +1,7 @@
 import os, subprocess
 
+STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
 class Timecat:
 
     def __init__(self, path: str = "timecat", time: int = 1000):
@@ -50,9 +52,12 @@ class Timecat:
                 best_move = line.split()[-1]
                 break
         return best_move
-    
+
     def set_fen(self, fen):
         self._put("set board fen {}".format(fen))
+
+    def reset(self):
+        self.set_fen(STARTING_FEN)
 
     def quit(self):
         self._put("quit")

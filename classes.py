@@ -139,8 +139,13 @@ class ChessDotComBoard(Board):
                     return self.find_element(By.CLASS_NAME, "play-controller-moves-container", 0)
                 except:
                     pass
+    
+    def reset(self):
+        self.board.reset()
+        self.bot.reset()
 
     def set_pre_play_constants(self):
+        self.reset()
         self.move_list = self.get_move_list()
         self.chess_board = self.find_element(By.TAG_NAME, "chess-board")
         self.is_flipped = "flipped" in self.chess_board.get_attribute("class")
