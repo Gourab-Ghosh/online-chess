@@ -7,6 +7,11 @@ from selenium.webdriver.common.action_chains import ActionChains
 from rich.traceback import install
 from timecat import Timecat
 
+try:
+    from credentials import USERNAME, PASSWORD
+except:
+    USERNAME = PASSWORD = None
+
 install()
 
 # class Timecat:
@@ -46,8 +51,8 @@ class Driver:
         while True:
             try:
                 element.click()
-            except:
-                pass
+            except Exception as e:
+                print(e)
             else:
                 break
 
@@ -276,3 +281,12 @@ class LichessBrowser(Browser):
         self.username_input_selector = (By.ID, "form3-username")
         self.password_input_selector = (By.ID, "form3-password")
         self.login_button_selector = (By.CSS_SELECTOR, ".submit.button")
+
+def main():
+    global browser
+    browser = ChessDotComBrowser()
+    # browser = LichessBrowser()
+    if USERNAME is not None and PASSWORD is not None:
+        browser.login(USERNAME, PASSWORD)
+    browser.start_game()
+    browser.board.play_game()
