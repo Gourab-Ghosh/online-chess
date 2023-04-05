@@ -47,7 +47,7 @@ class Driver:
     def wait(self, wait_time: int = 1) -> None:
         time.sleep(wait_time)
     
-    def click(self, element, wait_time = 60):
+    def click(self, element, wait_time = 5):
         self.driver.execute_script("arguments[0].scrollIntoView();", element)
         if wait_time == 0:
             element.click()
