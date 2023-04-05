@@ -70,10 +70,11 @@ class Square(Driver):
 
 class Board(Driver):
     
-    def __init__(self, driver=None) -> None:
+    def __init__(self, driver=None, auto_decline_draw=False) -> None:
         super().__init__(driver)
         self.board = chess.Board()
         self.bot = Timecat()
+        self.auto_decline_draw = auto_decline_draw
 
 class ChessDotComBoard(Board):
 
@@ -177,11 +178,23 @@ class ChessDotComBoard(Board):
         self.chess_board = self.find_element(By.TAG_NAME, "chess-board")
         self.is_flipped = "flipped" in self.chess_board.get_attribute("class")
         print(f"Board flipped: {self.is_flipped}")
-    
+
+    def accept_draw(self):
+        pass
+
+    def decline_draw(self):
+        pass
+
     def get_ply(self) -> int:
-        moves = self.move_list.find_elements(By.CLASS_NAME, "node")
+        try:
+            moves = self.move_list.find_elements(By.CLASS_NAME, "node")
+        except:
+            if self.auto_decline_draw:
+                self.decline_draw()
+                return self.get_ply()
+            return
         return len(moves)
-    
+
     def wait_while_dragging_piece(self):
         while any("dragging" in i.get_attribute("class") for i in self.find_elements(By.CLASS_NAME, "piece")):
             pass
@@ -189,13 +202,16 @@ class ChessDotComBoard(Board):
     def detect_move(self, wait_for_move = True):
         if wait_for_move:
             prev_ply = self.get_ply()
+            while prev_ply is None:
+                prev_ply = self.get_ply()
             while True:
                 if self.is_game_over():
                     return
-                if self.get_ply() > prev_ply:
-                    # self.wait(0.5)
-                    self.wait_while_dragging_piece()
-                    break
+                curr_ply = self.get_ply()
+                if None not in (curr_ply, prev_ply)
+                    if curr > prev_ply:
+                        self.wait_while_dragging_piece()
+                        break
         curr_piece_map = self.get_piece_unordered_map()
         for move in self.board.legal_moves:
             self.board.push(move)
