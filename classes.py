@@ -50,7 +50,11 @@ class Driver:
     def click(self, element, wait_time = 5):
         self.driver.execute_script("arguments[0].scrollIntoView();", element)
         if wait_time == 0:
-            element.click()
+            try:
+                element.click()
+            except Exception as e:
+                print(e)
+                self.driver.execute_script("arguments[0].click();", element)
             return
         start_time = time.time()
         while time.time() - start_time < wait_time:
@@ -70,7 +74,7 @@ class Square(Driver):
 
 class Board(Driver):
     
-    def __init__(self, driver=None, auto_decline_draw=False) -> None:
+    def __init__(self, driver=None, auto_decline_draw=True) -> None:
         super().__init__(driver)
         self.board = chess.Board()
         self.bot = Timecat()
@@ -158,8 +162,17 @@ class ChessDotComBoard(Board):
         self.board.push(move)
         self.bot.apply_move(move.uci())
 
-    def get_move_list(self):
-        while True:
+    def move_list(self, wait_time = 60):
+        if wait_time == 0:
+            try:
+                return self.find_element(By.ID, "move-list", 0)
+            except:
+                try:
+                    return self.find_element(By.CLASS_NAME, "play-controller-moves-container", 0)
+                except:
+                    return
+        start_time = time.time()
+        while time.time() - start_time < wait_time:
             try:
                 return self.find_element(By.ID, "move-list", 0)
             except:
@@ -167,27 +180,29 @@ class ChessDotComBoard(Board):
                     return self.find_element(By.CLASS_NAME, "play-controller-moves-container", 0)
                 except:
                     pass
-    
+
     def reset(self):
         self.board.reset()
         self.bot.reset()
 
     def set_pre_play_constants(self):
         self.reset()
-        self.move_list = self.get_move_list()
         self.chess_board = self.find_element(By.TAG_NAME, "chess-board")
         self.is_flipped = "flipped" in self.chess_board.get_attribute("class")
         print(f"Board flipped: {self.is_flipped}")
 
+    def get_draw_buttons(self):
+        return self.find_elements(By.CLASS_NAME, "draw-offer-button")
+
     def accept_draw(self):
-        pass
+        self.click(self.get_draw_buttons()[-1], 0)
 
     def decline_draw(self):
-        pass
+        self.click(self.get_draw_buttons()[0], 0)
 
     def get_ply(self) -> int:
         try:
-            moves = self.move_list.find_elements(By.CLASS_NAME, "node")
+            moves = self.move_list(0).find_elements(By.CLASS_NAME, "node")
         except:
             if self.auto_decline_draw:
                 self.decline_draw()
@@ -208,8 +223,8 @@ class ChessDotComBoard(Board):
                 if self.is_game_over():
                     return
                 curr_ply = self.get_ply()
-                if None not in (curr_ply, prev_ply)
-                    if curr > prev_ply:
+                if None not in (curr_ply, prev_ply):
+                    if curr_ply > prev_ply:
                         self.wait_while_dragging_piece()
                         break
         curr_piece_map = self.get_piece_unordered_map()
