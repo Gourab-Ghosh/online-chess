@@ -49,7 +49,6 @@ class Driver:
     
     def click(self, element, wait_time = 60):
         self.driver.execute_script("arguments[0].scrollIntoView();", element)
-        # self.driver.execute_script("arguments[0].click();", element)
         if wait_time == 0:
             element.click()
             return
@@ -61,7 +60,7 @@ class Driver:
                 print(e)
             else:
                 return
-        raise Exception("Elenemt {} not clickable".format(element))
+        self.driver.execute_script("arguments[0].click();", element)
 
 class Piece(Driver):
     pass
