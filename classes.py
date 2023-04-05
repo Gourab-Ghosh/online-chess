@@ -47,14 +47,21 @@ class Driver:
     def wait(self, wait_time: int = 1) -> None:
         time.sleep(wait_time)
     
-    def click(self, element):
-        while True:
+    def click(self, element, wait_time = 60):
+        self.driver.execute_script("arguments[0].scrollIntoView();", element)
+        # self.driver.execute_script("arguments[0].click();", element)
+        if wait_time == 0:
+            element.click()
+            return
+        start_time = time.time()
+        while time.time() - start_time < wait_time:
             try:
                 element.click()
             except Exception as e:
                 print(e)
             else:
-                break
+                return
+        raise Exception("Elenemt {} not clickable".format(element))
 
 class Piece(Driver):
     pass
@@ -128,7 +135,14 @@ class ChessDotComBoard(Board):
             self.click(promotion_piece)
 
     def is_game_over(self):
-        return self.board.is_game_over()
+        for css_selector in [".game-over-modal-content", ".board-modal-modal"]:
+            try:
+                self.find_element(By.CSS_SELECTOR, css_selector, 0)
+            except:
+                pass
+            else:
+                return True
+        return self.board.is_checkmate() or self.board.is_stalemate() or self.board.is_fifty_moves() or self.board.is_repetition(3) or self.board.is_insufficient_material()
 
     def push(self, move: chess.Move, drag: bool = True):
         if move == chess.Move.null():
@@ -177,6 +191,8 @@ class ChessDotComBoard(Board):
         if wait_for_move:
             prev_ply = self.get_ply()
             while True:
+                if self.is_game_over():
+                    return
                 if self.get_ply() > prev_ply:
                     # self.wait(0.5)
                     self.wait_while_dragging_piece()
