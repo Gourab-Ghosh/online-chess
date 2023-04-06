@@ -237,6 +237,7 @@ class ChessDotComBoard(Board):
                 self.board.pop()
 
     def play_game(self): # Incomplete
+        self.move_list()
         self.set_pre_play_constants()
         self.board.reset()
         print("Started Playing...")

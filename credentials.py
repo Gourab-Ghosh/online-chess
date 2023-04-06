@@ -1,6 +1,6 @@
 import random, string
 
-random.seed(0)
+random.seed(1)
 
 username_chars = string.ascii_letters + string.digits
 password_chars = string.ascii_letters + string.digits + string.punctuation
