@@ -132,11 +132,14 @@ class ChessDotComBoard(Board):
         offset = (j-i for i, j in zip(from_square_coord, to_square_coord))
         piece = self.find_element(By.CLASS_NAME, f"square-{from_square % 8 + 1}{from_square // 8 + 1}")
         action.drag_and_drop_by_offset(piece, *offset).perform()
-        self.wait_while_dragging_piece()
         if promotion:
-            promotion_piece_css_selector = f".promotion-piece.{'w' if self.board.turn else 'b'}{' pkbrqk'[promotion]}"
+            promotion_piece_css_selector = ".promotion-piece.{}{}".format(
+                "w" if self.board.turn else 'b',
+                " pkbrqk"[promotion],
+            )
             promotion_piece = self.find_element(By.CSS_SELECTOR, promotion_piece_css_selector)
             self.click(promotion_piece)
+        self.wait_while_dragging_piece()
 
     def is_game_over(self):
         for css_selector in [".game-over-modal-content", ".board-modal-modal"]:
@@ -158,7 +161,6 @@ class ChessDotComBoard(Board):
             if self.is_game_over():
                 return
             self.move_piece(move.from_square, move.to_square, move.promotion)
-        print(f"Move: {self.board.san(move)}")
         self.board.push(move)
         self.bot.apply_move(move.uci())
 

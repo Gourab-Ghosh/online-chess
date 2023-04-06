@@ -1,4 +1,5 @@
 import os, subprocess
+from rich.pretty import pprint as print
 
 STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
