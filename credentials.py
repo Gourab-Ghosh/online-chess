@@ -1,6 +1,6 @@
 import random, string
 
-random.seed(2)
+random.seed(3)
 
 username_chars = string.ascii_letters + string.digits
 username_length = random.choice(range(5, 11))
