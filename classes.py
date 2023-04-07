@@ -149,7 +149,7 @@ class ChessDotComBoard(Board):
                 pass
             else:
                 return True
-        return self.board.is_checkmate() or self.board.is_stalemate() or self.board.is_fifty_moves() or self.board.is_repetition(3) or self.board.is_insufficient_material()
+        return False
 
     def push(self, move: chess.Move, drag: bool = True):
         if move == chess.Move.null():
@@ -238,7 +238,15 @@ class ChessDotComBoard(Board):
             finally:
                 self.board.pop()
 
-    def play_game(self): # Incomplete
+    def parse_move(self, move):
+        if isinstance(move, chess.Move):
+            return move
+        try:
+            return chess.Move.from_uci(move)
+        except:
+            return self.board.parse_san(move)
+
+    def play_game(self):
         self.move_list()
         self.set_pre_play_constants()
         self.board.reset()
@@ -252,8 +260,7 @@ class ChessDotComBoard(Board):
             if self.is_game_over():
                 break
             bot_turn = self.board.turn == bot_color
-            # move = chess.Move.from_uci(self.bot.get_best_move()) if bot_turn else self.detect_move()
-            move = self.board.parse_san(self.bot.get_best_move()) if bot_turn else self.detect_move()
+            move = self.parse_move(self.bot.get_best_move()) if bot_turn else self.detect_move()
             if move is None:
                 break
             self.push(move, bot_turn)
