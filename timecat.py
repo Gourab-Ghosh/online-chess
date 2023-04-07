@@ -1,5 +1,7 @@
 import os, subprocess
-from rich.pretty import pprint as print
+from rich.console import Console
+
+print = Console().print
 
 STARTING_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
@@ -24,7 +26,7 @@ class Timecat:
             raise BrokenPipeError()
         if self._timecat.poll() is not None:
             raise Exception("The Timecat process has crashed")
-        return self._timecat.stdout.readline().strip()
+        return self._timecat.stdout.readline().strip("\n")
     
     def _put(self, command: str) -> None:
         if not self._timecat.stdin:
