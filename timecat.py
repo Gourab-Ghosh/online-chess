@@ -26,7 +26,7 @@ class Timecat:
             raise BrokenPipeError()
         if self._timecat.poll() is not None:
             raise Exception("The Timecat process has crashed")
-        return self._timecat.stdout.readline().strip("\n")
+        return self._timecat.stdout.readline().rstrip()
     
     def _put(self, command: str) -> None:
         if not self._timecat.stdin:
