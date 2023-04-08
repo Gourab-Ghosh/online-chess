@@ -142,14 +142,14 @@ class ChessDotComBoard(Board):
         self.wait_while_dragging_piece()
 
     def is_game_over(self):
-        for css_selector in [".game-over-modal-content", ".board-modal-modal"]:
-            try:
-                self.find_element(By.CSS_SELECTOR, css_selector, 0)
-            except:
-                pass
-            else:
-                return True
-        return False
+        css_selector = ".board-modal-modal"
+        try:
+            self.find_element(By.CSS_SELECTOR, css_selector, 0)
+        except:
+            pass
+        else:
+            return True
+        return self.board.is_game_over(claim_draw = False) or self.board.is_repetition(3)
 
     def push(self, move: chess.Move, drag: bool = True):
         if move == chess.Move.null():
@@ -242,9 +242,9 @@ class ChessDotComBoard(Board):
         if isinstance(move, chess.Move):
             return move
         try:
-            return chess.Move.from_uci(move)
-        except:
             return self.board.parse_san(move)
+        except:
+            return chess.Move.from_uci(move)
 
     def play_game(self):
         self.move_list()
