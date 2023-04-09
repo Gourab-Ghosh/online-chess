@@ -14,6 +14,8 @@ except:
 
 install()
 
+inf = float("inf")
+
 # class Timecat:
     
 #     def __init__(self) -> None:
@@ -193,6 +195,7 @@ class ChessDotComBoard(Board):
                     return self.find_element(By.CLASS_NAME, "play-controller-moves-container", 0)
                 except:
                     pass
+        raise Exception("Move list not found after waiting for {} seconds".format(wait_time))
 
     def reset(self):
         self.board.reset()
@@ -256,7 +259,7 @@ class ChessDotComBoard(Board):
             return chess.Move.from_uci(move)
 
     def play_game(self):
-        self.move_list()
+        self.move_list(inf)
         self.set_pre_play_constants()
         self.board.reset()
         print("Started Playing...")
