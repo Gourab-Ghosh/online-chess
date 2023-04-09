@@ -88,7 +88,7 @@ class ChessDotComBoard(Board):
     def scan_board(self):
         self.chess_board = self.find_element(By.TAG_NAME, "chess-board")
 
-    def get_piece_unordered_map(self):
+    def get_piece_map(self):
         pieces = self.find_elements(By.CLASS_NAME, "piece")
         piece_map = {}
         for piece in pieces:
@@ -101,9 +101,9 @@ class ChessDotComBoard(Board):
                     if cls.startswith("square"):
                         position = cls
                 if detail is None or position is None:
-                    return self.get_piece_unordered_map()
+                    return self.get_piece_map()
             except:
-                return self.get_piece_unordered_map()
+                return self.get_piece_map()
             row, col = tuple(int(i) for i in position[-2:])
             piece_symbol = detail[1].upper() if detail[0] == "w" else detail[1].lower()
             piece = chess.Piece.from_symbol(piece_symbol)
@@ -142,14 +142,25 @@ class ChessDotComBoard(Board):
         self.wait_while_dragging_piece()
 
     def is_game_over(self):
-        css_selector = ".board-modal-modal"
-        try:
-            self.find_element(By.CSS_SELECTOR, css_selector, 0)
-        except:
-            pass
-        else:
-            return True
-        return self.board.is_game_over(claim_draw = False) or self.board.is_repetition(3)
+        for css_selector in [".game-over-modal-content", ".board-modal-modal"]:
+            try:
+                self.find_element(By.CSS_SELECTOR, css_selector, 0)
+            except:
+                pass
+            else:
+                return True
+        is_game_over = False
+        outcome = self.board.outcome()
+        if outcome is not None:
+            is_game_over = outcome.termination in [getattr(chess.Termination, attr) for attr in [
+                "VARIANT_LOSS",
+                "VARIANT_WIN",
+                "VARIANT_DRAW",
+                "CHECKMATE",
+                "INSUFFICIENT_MATERIAL",
+                "STALEMATE",
+            ]]
+        return is_game_over or self.board.is_repetition(3) or self.board.is_fifty_moves()
 
     def push(self, move: chess.Move, drag: bool = True):
         if move == chess.Move.null():
@@ -218,18 +229,13 @@ class ChessDotComBoard(Board):
 
     def detect_move(self, wait_for_move = True):
         if wait_for_move:
-            prev_ply = self.get_ply()
-            while prev_ply is None:
-                prev_ply = self.get_ply()
             while True:
+                self.wait_while_dragging_piece()
                 if self.is_game_over():
                     return
-                curr_ply = self.get_ply()
-                if None not in (curr_ply, prev_ply):
-                    if curr_ply > prev_ply:
-                        self.wait_while_dragging_piece()
-                        break
-        curr_piece_map = self.get_piece_unordered_map()
+                if self.board.piece_map() != self.get_piece_map():
+                    break
+        curr_piece_map = self.get_piece_map()
         for move in self.board.legal_moves:
             self.board.push(move)
             try:
@@ -237,6 +243,7 @@ class ChessDotComBoard(Board):
                     return move
             finally:
                 self.board.pop()
+        return self.detect_move(False)
 
     def parse_move(self, move):
         if isinstance(move, chess.Move):
@@ -258,10 +265,12 @@ class ChessDotComBoard(Board):
                 self.push(move, False)
         while True:
             if self.is_game_over():
+                print("Game is over!")
                 break
             bot_turn = self.board.turn == bot_color
             move = self.parse_move(self.bot.get_best_move()) if bot_turn else self.detect_move()
             if move is None:
+                print("Got None as move")
                 break
             self.push(move, bot_turn)
 
