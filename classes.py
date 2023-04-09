@@ -243,6 +243,8 @@ class ChessDotComBoard(Board):
                     return move
             finally:
                 self.board.pop()
+        if self.is_game_over():
+            return
         return self.detect_move(False)
 
     def parse_move(self, move):
