@@ -144,11 +144,7 @@ class ChessDotComBoard(Board):
         self.wait_while_dragging_piece()
 
     def is_game_over(self):
-        for css_selector in [
-            ".game-over-modal-content",
-            ".board-modal-modal",
-            ".modal-chessboard-container-next-component",
-        ]:
+        for css_selector in [".game-over-modal-content", ".board-modal-modal"]:
             try:
                 self.find_element(By.CSS_SELECTOR, css_selector, 0)
             except:
@@ -314,13 +310,20 @@ class ChessDotComBoard(Board):
         turn = "white" in self.find_element(By.CSS_SELECTOR, ".section-heading-title.section-heading-normal").text.lower()
         self.play_game(self.get_fen_from_piece_map(turn = turn), False)
 
+    def is_puzzle_rush_over(self):
+        try:
+            self.find_element(By.CSS_SELECTOR, ".modal-chessboard-container-next-component", 0)
+        except:
+            return False
+        return True
+
     def play_puzzle_rush(self):
         while True:
-            if self.is_game_over:
-                break
             self.play_puzzle_rush_once()
             self.wait()
             self.wait_while_dragging_piece()
+            if self.is_puzzle_rush_over():
+                break
 
 class LichessBoard(Board):
     pass
