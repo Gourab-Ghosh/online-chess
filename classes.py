@@ -316,6 +316,8 @@ class ChessDotComBoard(Board):
 
     def play_puzzle_rush(self):
         while True:
+            if self.is_game_over:
+                break
             self.play_puzzle_rush_once()
             self.wait()
             self.wait_while_dragging_piece()
