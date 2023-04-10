@@ -144,7 +144,11 @@ class ChessDotComBoard(Board):
         self.wait_while_dragging_piece()
 
     def is_game_over(self):
-        for css_selector in [".game-over-modal-content", ".board-modal-modal"]:
+        for css_selector in [
+            ".game-over-modal-content",
+            ".board-modal-modal",
+            ".modal-chessboard-container-next-component",
+        ]:
             try:
                 self.find_element(By.CSS_SELECTOR, css_selector, 0)
             except:
@@ -200,6 +204,10 @@ class ChessDotComBoard(Board):
     def reset(self):
         self.board.reset()
         self.bot.reset()
+    
+    def set_fen(self, fen):
+        self.board.set_fen(fen)
+        self.bot.set_fen(fen)
 
     def set_pre_play_constants(self):
         self.reset()
@@ -230,7 +238,9 @@ class ChessDotComBoard(Board):
         while any("dragging" in i.get_attribute("class") for i in self.find_elements(By.CLASS_NAME, "piece")):
             pass
 
-    def detect_move(self, wait_for_move = True):
+    def detect_move(self, wait_for_move = True, num_retries = 3):
+        if num_retries == 0:
+            return
         if wait_for_move:
             while True:
                 self.wait_while_dragging_piece()
@@ -248,7 +258,7 @@ class ChessDotComBoard(Board):
                 self.board.pop()
         if self.is_game_over():
             return
-        return self.detect_move(False)
+        return self.detect_move(False, num_retries - 1)
 
     def parse_move(self, move):
         if isinstance(move, chess.Move):
@@ -258,10 +268,31 @@ class ChessDotComBoard(Board):
         except:
             return chess.Move.from_uci(move)
 
-    def play_game(self):
-        self.move_list(inf)
+    def get_fen_from_piece_map(self, turn = None, castling_rights = None, en_passant = None, halfmove_clock = None, fullmove_number = None):
+        piece_map = self.get_piece_map()
+        board = chess.Board()
+        board.clear()
+        for square, piece in piece_map.items():
+            board.set_piece_at(square, piece)
+        for attr, value in [
+            ("turn", turn),
+            ("castling_rights", castling_rights),
+            ("ep_square", en_passant),
+            ("halfmove_clock", halfmove_clock),
+            ("fullmove_number", fullmove_number),
+        ]:
+            if value is not None:
+                setattr(board, attr, value)
+        return board.fen()
+
+    def play_game(self, starting_fen = None, wait_for_move_list = True):
+        if wait_for_move_list:
+            self.move_list(inf)
         self.set_pre_play_constants()
-        self.board.reset()
+        if starting_fen:
+            self.set_fen(starting_fen)
+        else:
+            self.reset()
         print("Started Playing...")
         bot_color = not self.is_flipped
         if self.board.turn != bot_color:
@@ -278,6 +309,16 @@ class ChessDotComBoard(Board):
                 print("Got None as move")
                 break
             self.push(move, bot_turn)
+    
+    def play_puzzle_rush_once(self):
+        turn = "white" in self.find_element(By.CSS_SELECTOR, ".section-heading-title.section-heading-normal").text.lower()
+        self.play_game(self.get_fen_from_piece_map(turn = turn), False)
+
+    def play_puzzle_rush(self):
+        while True:
+            self.play_puzzle_rush_once()
+            self.wait()
+            self.wait_while_dragging_piece()
 
 class LichessBoard(Board):
     pass

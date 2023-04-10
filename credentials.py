@@ -1,6 +1,6 @@
 import sys, random, string
 
-seed = 0
+seed = 9
 
 def generate_username_and_password(seed = seed):
     random.seed(seed)
