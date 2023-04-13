@@ -144,6 +144,8 @@ class ChessDotComBoard(Board):
         self.wait_while_dragging_piece()
 
     def is_game_over(self):
+        if self.is_puzzle_rush_over():
+            return True
         for css_selector in [".game-over-modal-content", ".board-modal-modal"]:
             try:
                 self.find_element(By.CSS_SELECTOR, css_selector, 0)
@@ -264,12 +266,17 @@ class ChessDotComBoard(Board):
         except:
             return chess.Move.from_uci(move)
 
-    def get_fen_from_piece_map(self, turn = None, castling_rights = None, en_passant = None, halfmove_clock = None, fullmove_number = None):
+    def get_fen_from_piece_map(self, turn = None, castling_squares = (), en_passant = None, halfmove_clock = None, fullmove_number = None):
         piece_map = self.get_piece_map()
         board = chess.Board()
         board.clear()
         for square, piece in piece_map.items():
             board.set_piece_at(square, piece)
+        castling_rights = 0
+        for square in castling_squares:
+            castling_rights |= chess.BB_SQUARES[square]
+        if fullmove_number is None:
+            fullmove_number = self.get_ply()
         for attr, value in [
             ("turn", turn),
             ("castling_rights", castling_rights),
