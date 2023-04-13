@@ -227,7 +227,10 @@ class ChessDotComBoard(Board):
             moves = self.move_list(0).find_elements(By.CLASS_NAME, "node")
         except:
             if self.auto_decline_draw:
-                self.decline_draw()
+                try:
+                    self.decline_draw()
+                except:
+                    return
                 return self.get_ply()
             return
         return len(moves)
