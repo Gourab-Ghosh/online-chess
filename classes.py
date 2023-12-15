@@ -209,7 +209,7 @@ class ChessDotComBoard(Board):
 
     def set_pre_play_constants(self):
         self.reset()
-        self.chess_board = self.find_element(By.TAG_NAME, "chess-board")
+        self.chess_board = self.find_element(By.TAG_NAME, "wc-chess-board")
         self.is_flipped = "flipped" in self.chess_board.get_attribute("class")
         print(f"Board flipped: {self.is_flipped}")
 

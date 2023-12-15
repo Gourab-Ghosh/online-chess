@@ -18,7 +18,7 @@ class Timecat:
             stderr=subprocess.STDOUT,
         )
         self._has_quit_command_been_sent = False
-        self._put("set ucimode false")
+        self._put("console")
         self.disable_info = False
 
     def _read_line(self) -> str:
