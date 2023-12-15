@@ -18,7 +18,7 @@ class Timecat:
             stderr=subprocess.STDOUT,
         )
         self._has_quit_command_been_sent = False
-        self._put("set color false")
+        self._put("set ucimode false")
         self.disable_info = False
 
     def _read_line(self) -> str:
@@ -46,7 +46,7 @@ class Timecat:
         print(self._read_line())
 
     def get_best_move(self):
-        self._put("go time {}".format(self.time))
+        self._put("go movetime {}".format(self.time))
         while True:
             line = self._read_line()
             if not (self.disable_info and (line.lower().startswith("info") or line.lower().startswith("pv"))):
