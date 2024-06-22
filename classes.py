@@ -373,8 +373,8 @@ class ChessDotComBrowser(Browser):
     def set_ids_and_css(self) -> None:
         self.board = ChessDotComBoard(self.driver)
         self.login_page_link_selector = (By.LINK_TEXT, "Log In")
-        self.username_input_selector = (By.ID, "username")
-        self.password_input_selector = (By.ID, "password")
+        self.username_input_selector = (By.CSS_SELECTOR, ".cc-input-component.cc-input-group-space-prepend")
+        self.password_input_selector = (By.CSS_SELECTOR, ".cc-input-component.cc-input-group-space-prepend.cc-input-group-space-append")
         self.login_button_selector = (By.ID, "login")
         self.play_button_selector = (By.CSS_SELECTOR, ".ui_v5-button-component.ui_v5-button-primary.ui_v5-button-large.ui_v5-button-full")
 
